@@ -1,5 +1,6 @@
 #include <stdbool.h> // oh god why
 #include <stdio.h>
+#include <string.h>
 
 int LINE_LENGTH = 100; // Max # of characters in an input line
 int MAX_ARGS = 7; // Max number of arguments to a command
@@ -12,13 +13,26 @@ int main(int argc, char const *argv[]) {
 
     while (continueRunning) {
         printf("Please enter a command\n");
-
         char input[LINE_LENGTH];
         scanf("%[^\n]%*c", input);
+        char delim[] = " ";
+        char *ptr = strtok(input, delim);
+        
+        char* args[MAX_ARGS][1];
+        int j = 0;
+        while (ptr != NULL && j < 7) {
+            args[j++][0] = ptr;
+            ptr = strtok(NULL, delim);
+        }
 
-        printf("What was inputted: ");
-        printf(input);
-        printf("\n");
+        if (strcmp(args[0], "exit")) {
+            // TODO: implement exit and cleanup
+            printf("We hit exit.\n");
+        }
+        else if (strcmp(args[0], "jobs")) {
+            
+        }
+
         break;
     }
 
