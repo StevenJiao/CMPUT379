@@ -78,11 +78,11 @@ int main(int argc, char const *argv[]) {
         cout << "SHELL379: ";
         string initialInput;
         getline(cin, initialInput);
-        cout << endl;
         vector<string> args = stringToArgs(initialInput);
         bool hasAmpersand = initialInput.find("&") == string::npos ? false : true;
 
-        if (args[0].compare("exit") == 0) {
+        if (args[0].compare("exit") == 0) { // add in wait or clear all processes?
+            cout << endl;
             getrusage(RUSAGE_SELF, &myUsage);
             cout << "Resources used: " << endl;
             printf("User Time =%10ld seconds\n", myUsage.ru_utime.tv_sec);
@@ -93,7 +93,8 @@ int main(int argc, char const *argv[]) {
             cout << output_lines_from_ps << " " << mainPid << endl;
             exit(0);
         }
-        else if (args[0].compare("jobs") == 0) {
+        else if (args[0].compare("jobs") == 0) { // fix header with 0 processes to not show up
+            cout << endl;
             string cmd = "ps -o pid,s,times:3=SEC,command --ppid " + to_string(mainPid) + " | grep -v sh";
             string output_lines_from_ps = cmdExec(cmd);
             cout << "Running processes: " << endl;
@@ -118,6 +119,7 @@ int main(int argc, char const *argv[]) {
             cout << "Completed Processes:" << endl;
             printf("User Time =%10ld seconds\n", myUsage.ru_utime.tv_sec);
             printf("Sys  Time =%10ld seconds\n", myUsage.ru_stime.tv_sec);
+            cout << endl;
         }
         else if (args[0].compare("kill") == 0) {
             if (args[1].length() == 0) {
@@ -147,7 +149,7 @@ int main(int argc, char const *argv[]) {
             }
             kill(stoi(args[1]), SIGSTOP);
         }
-        else if (args[0].compare("wait") == 0) {
+        else if (args[0].compare("wait") == 0) { // get this working for a pid
             if (args[1].length() == 0) {
                 cout << "invalid args for command" << endl;
                 continue;
@@ -158,7 +160,7 @@ int main(int argc, char const *argv[]) {
             waitpid(p, &i, 0);
             cout << "Done Waiting" << endl;
         }
-        else {
+        else { // handle < and >
             pid_t rc = fork();
 
             if (rc < 0) { // fork failed; exit
@@ -180,7 +182,6 @@ int main(int argc, char const *argv[]) {
                 }
             }
         }
-        cout << endl;
     }
 
     return 0;
