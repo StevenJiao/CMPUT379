@@ -36,7 +36,7 @@ int status;
 //     return result;
 // }
 
-string cmdExec(string cmd) {
+string readCmd(string cmd) {
     FILE * p; 
     array<char, 128> buffer;
     string result;
@@ -72,16 +72,34 @@ void argsToCharC(vector<string> args, char ** argv1) {
 int main(int argc, char const *argv[]) {
     bool continueRunning = true;
     mainPid = getpid();
-    cout << "Welcome to Shell379 - Syjiao" << endl;
+    cout << "Welcome to SHELL379 - Syjiao" << endl;
 
     while (continueRunning) {
         cout << "SHELL379: ";
         string initialInput;
         getline(cin, initialInput);
         vector<string> args = stringToArgs(initialInput);
+
+        string outputFileName;
+        string inputFileName;
+        string inputFileContent;
+        for (int i = 0; i < args.size(); i++) {
+            string s = args.at(i);
+            if (s.at(0) == '<') {
+                inputFileName = s.substr(1);
+                inputFileContent = readCmd("cat " + inputFileName);
+                args.erase(args.begin() + i);
+            }
+            else if (s.at(0) == '>') {
+                outputFileName = s.substr(1);
+                args.erase(args.begin() + i);
+            }
+        }
+
         bool hasAmpersand = initialInput.find("&") == string::npos ? false : true;
 
-        if (args[0].compare("exit") == 0) { // add in wait or clear all processes?
+        if (args[0].compare("exit") == 0) { // clear all processes?
+            while (wait(&status) > 0);
             cout << endl;
             getrusage(RUSAGE_SELF, &myUsage);
             cout << "Resources used: " << endl;
@@ -89,14 +107,14 @@ int main(int argc, char const *argv[]) {
             printf("Sys  Time =%10ld seconds\n", myUsage.ru_stime.tv_sec);
 
             string cmd = "pgrep -P " + to_string(mainPid);
-            string output_lines_from_ps = cmdExec(cmd.c_str());
+            string output_lines_from_ps = readCmd(cmd.c_str());
             cout << output_lines_from_ps << " " << mainPid << endl;
             exit(0);
         }
         else if (args[0].compare("jobs") == 0) { // fix header with 0 processes to not show up
             cout << endl;
             string cmd = "ps -o pid,s,times:3=SEC,command --ppid " + to_string(mainPid) + " | grep -v sh";
-            string output_lines_from_ps = cmdExec(cmd);
+            string output_lines_from_ps = readCmd(cmd);
             cout << "Running processes: " << endl;
 
             stringstream ss(output_lines_from_ps);
@@ -156,9 +174,7 @@ int main(int argc, char const *argv[]) {
             }
             int i;
             pid_t p = stoi(args[1]);
-            cout << "Start Waiting for " << p << endl;
             waitpid(p, &i, 0);
-            cout << "Done Waiting" << endl;
         }
         else { // handle < and >
             pid_t rc = fork();
@@ -170,18 +186,36 @@ int main(int argc, char const *argv[]) {
             else if (rc == 0) { // child goes off to execute its process and finishes whenever
                 char *argv1[args.size()];
                 argsToCharC(args, argv1);
-                if (execvp(argv1[0], argv1) < 0) {
-                    perror("SHELL379");
+
+                 if (inputFileName.size() > 0 && inputFileContent.size() > 0) {
+                    FILE * p; 
+                    if ((p = popen(*argv1, "w")) == NULL) {
+                        perror( "Couldn't open pipe\n");
+                    }
+                    else {
+                        fwrite(inputFileContent.c_str(), sizeof(inputFileContent), strlen(inputFileContent.c_str()), p);
+                        pclose(p);
+                    }
                 }
+                else {
+                    if (execvp(argv1[0], argv1) < 0) {
+                        perror("SHELL379");
+                    }
+                }
+
                 _exit(0);
             }
             else { // parent
+                char *argv1[args.size()];
+                argsToCharC(args, argv1);
+                
                 if (!hasAmpersand) {
                     int j;
                     wait(&j);
                 }
             }
         }
+    
     }
 
     return 0;
