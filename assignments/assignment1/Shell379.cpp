@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <string.h>
 #include <vector>
 #include <sstream>
 #include <array>
@@ -8,10 +9,10 @@
 #include <stdexcept>
 #include <unistd.h>
 #include <sys/resource.h>
-#include <boost/algorithm/string/trim.hpp>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/signal.h>
+#include <fcntl.h>
 using namespace std; 
 
 int LINE_LENGTH = 100; // Max # of characters in an input line
@@ -22,19 +23,6 @@ int MAX_PT_ENTRIES = 32 ;// Max entries in the Process Table
 pid_t mainPid;
 struct rusage myUsage;
 int status;
-
-// std::string cmdExec(const char* cmd) {
-//     std::array<char, 128> buffer;
-//     std::string result;
-//     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd, "r"), pclose);
-//     if (!pipe) {
-//         throw std::runtime_error("popen() failed!");
-//     }
-//     while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-//         result += buffer.data();
-//     }
-//     return result;
-// }
 
 string readCmd(string cmd) {
     FILE * p; 
@@ -82,17 +70,13 @@ int main(int argc, char const *argv[]) {
 
         string outputFileName;
         string inputFileName;
-        string inputFileContent;
         for (int i = 0; i < args.size(); i++) {
             string s = args.at(i);
             if (s.at(0) == '<') {
                 inputFileName = s.substr(1);
-                inputFileContent = readCmd("cat " + inputFileName);
-                args.erase(args.begin() + i);
             }
             else if (s.at(0) == '>') {
                 outputFileName = s.substr(1);
-                args.erase(args.begin() + i);
             }
         }
 
@@ -114,6 +98,7 @@ int main(int argc, char const *argv[]) {
         else if (args[0].compare("jobs") == 0) { // fix header with 0 processes to not show up
             cout << endl;
             string cmd = "ps -o pid,s,times:3=SEC,command --ppid " + to_string(mainPid) + " | grep -v sh";
+            //string cmd = "ps -o pid,s,times:3=SEC,command --ppid " + to_string(mainPid);
             string output_lines_from_ps = readCmd(cmd);
             cout << "Running processes: " << endl;
 
@@ -167,56 +152,55 @@ int main(int argc, char const *argv[]) {
             }
             kill(stoi(args[1]), SIGSTOP);
         }
-        else if (args[0].compare("wait") == 0) { // get this working for a pid
+        else if (args[0].compare("wait") == 0) {
             if (args[1].length() == 0) {
                 cout << "invalid args for command" << endl;
                 continue;
             }
             int i;
-            pid_t p = stoi(args[1]);
-            waitpid(p, &i, 0);
+            waitpid(stoi(args[1]), &i, 0);
         }
-        else { // handle < and >
+        else {
+            int inputFid = -1, outputFid = -1;
+            if (inputFileName.size() > 0) {
+                inputFid = open(inputFileName.c_str(), O_RDONLY, S_IRUSR | S_IWUSR);
+            }
+            if (outputFileName.size() > 0) {
+                outputFid = open(outputFileName.c_str(), O_CREAT | O_WRONLY, S_IRUSR | S_IWUSR);
+            }
+
             pid_t rc = fork();
 
-            if (rc < 0) { // fork failed; exit
+            if (rc < 0) { // fork failed
                 fprintf(stderr, "fork failed\n");
                 exit(1);
             }
-            else if (rc == 0) { // child goes off to execute its process and finishes whenever
+            else if (rc == 0) { // child
                 char *argv1[args.size()];
                 argsToCharC(args, argv1);
 
-                 if (inputFileName.size() > 0 && inputFileContent.size() > 0) {
-                    FILE * p; 
-                    if ((p = popen(*argv1, "w")) == NULL) {
-                        perror( "Couldn't open pipe\n");
-                    }
-                    else {
-                        fwrite(inputFileContent.c_str(), sizeof(inputFileContent), strlen(inputFileContent.c_str()), p);
-                        pclose(p);
-                    }
+                if (inputFid != -1) {
+                    dup2(inputFid, STDIN_FILENO);
                 }
-                else {
-                    if (execvp(argv1[0], argv1) < 0) {
-                        perror("SHELL379");
-                    }
+                if (outputFid != -1) {
+                    dup2(outputFid, STDOUT_FILENO);
+                }
+                    
+                if (execvp(argv1[0], argv1) < 0) {
+                    perror("SHELL379");
                 }
 
-                _exit(0);
+                _exit(1);
             }
             else { // parent
                 char *argv1[args.size()];
                 argsToCharC(args, argv1);
-                
                 if (!hasAmpersand) {
                     int j;
                     wait(&j);
                 }
             }
         }
-    
     }
-
     return 0;
 }
