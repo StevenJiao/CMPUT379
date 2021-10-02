@@ -3,8 +3,9 @@
 #include <vector>
 #include <array>
 #include <sstream>
+#include <sys/types.h>
+#include <signal.h>
 using namespace std;
 
-string readCmd(string cmd);
 vector<string> stringToArgs(string s);
 void argsToCharC(vector<string> args, char ** argv1);

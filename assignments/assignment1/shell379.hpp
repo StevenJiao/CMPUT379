@@ -19,4 +19,11 @@ class Shell379 {
     Shell379();
     ~Shell379();
     void run();
+
+    private:
+    bool hasValidArgs(vector<string> args);
+    void showFormattedJobs();
+    void showUsage(string cmd);
+    void killAllChildProcesses(int parentPid);
+    string readCmd(string cmd);
 };
