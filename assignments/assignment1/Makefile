@@ -1,13 +1,18 @@
-all: Shell379 sleeper runner
+CC = g++
 
-Shell379: Shell379.cpp
-	g++ -o Shell379 Shell379.cpp
+all: shell379
 
-sleeper: sleeper.cpp
-	g++ -o sleeper sleeper.cpp
+shell379: main.o shell379.o helperFuncs.o
+	$(CC) -o shell379 shell379.o helperFuncs.o main.o
 
-runner: runner.cpp
-	g++ -o runner runner.cpp
+shell379.o: shell379.cpp
+	$(CC) -c shell379.cpp
+
+helperFuncs.o: helperFuncs.cpp
+	$(CC) -c helperFuncs.cpp
+
+main.o: main.cpp
+	$(CC) -c main.cpp
 
 clean:
-	rm -f Shell379 sleeper runner
+	rm -f shell379 main.o helperFuncs.o shell379.o
