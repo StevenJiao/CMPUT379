@@ -41,8 +41,8 @@ void Shell379::run() {
         if (args[0].compare("exit") == 0) { // exit command
             cout << endl;
             
-            // cleanup child processes
-            killAllChildProcesses(mainPid);
+            // cleanup child processes and kill
+            checkChildProcesses(mainPid, true);
 
             // show our usage
             showUsage(args[0]);
@@ -52,6 +52,8 @@ void Shell379::run() {
         }
         else if (args[0].compare("jobs") == 0) { // jobs command
             cout << endl;
+            // check child processes but don't kill
+            checkChildProcesses(mainPid, false);
             // show current jobs and job number
             showFormattedJobs();
             // show current usage
@@ -131,6 +133,10 @@ void Shell379::run() {
                     int j;
                     waitpid(rc, &j, 0);
                 }
+                else {
+                    int j;
+                    waitpid(rc, &j, WNOHANG);
+                }
 
                 // close our input and output files
                 if (inputFid != -1) {
@@ -162,7 +168,7 @@ void Shell379::showFormattedJobs() {
     // call ps and format columns to assignment requirments
     // only show pids whose parent pid is mainPid
     // grep exclude unecessary info
-    string cmd = "ps -o pid,s,times:3=SEC,command --ppid " + to_string(mainPid) + " | grep -v sh | grep -v defunct";
+    string cmd = "ps -o pid,s,times:3=SEC,command --ppid " + to_string(mainPid) + " | grep -v sh "; /*| grep -v defunct"; */
     string output_lines_from_ps = readCmd(cmd);
     cout << "Running processes: " << endl;
 
@@ -207,26 +213,6 @@ void Shell379::showUsage(string cmd) {
     printf("Sys  Time =%10ld seconds\n", myUsage.ru_stime.tv_sec);
 }
 
-/* 
-* Kills all child processes of a parent using its pid
-*/
-void Shell379::killAllChildProcesses(int parentPid) {
-    // get child process ids
-    string cmd = "pgrep -P " + to_string(parentPid);
-    string output_lines_from_ps = readCmd(cmd.c_str());
-    stringstream ss(output_lines_from_ps);
-    string childId;
-    // process each line of child pids
-    while (getline(ss, childId, '\n')) {
-        int childIdNum = stoi(childId);
-        // send kill signal
-        kill(childIdNum, SIGKILL);
-        // 'wait' to collect usage info
-        int i;
-        waitpid(childIdNum, &i, 0);
-    }
-}
-
 /*
 * By using the popen pipe, reads in a command's output and returns it as a string
 */
@@ -246,4 +232,27 @@ string Shell379::readCmd(string cmd) {
         pclose(p);
     }
     return result;
+}
+
+/*
+* Checkup on child processes to remove zombies, or kill them all
+*/
+void Shell379::checkChildProcesses(int parentPid, bool killChildren) {
+    // get child process ids
+    string cmd = "pgrep -P " + to_string(parentPid);
+    string output_lines_from_ps = readCmd(cmd.c_str());
+    stringstream ss(output_lines_from_ps);
+    string childId;
+    // process each line of child pids
+    while (getline(ss, childId, '\n')) {
+        int childIdNum = stoi(childId);
+        int flag = WNOHANG;
+        if (killChildren) {
+            flag = 0;
+            kill(childIdNum, SIGKILL);
+        }
+        // 'wait' to collect usage info
+        int i;
+        waitpid(childIdNum, &i, flag);
+    }
 }
