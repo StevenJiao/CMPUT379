@@ -1,7 +1,7 @@
 CC = g++
 
-prodcon: prodcon.o commands.o
-	$(CC) -o prodcon prodcon.o commands.o
+prodcon: prodcon.o tands.o
+	$(CC) -pthread -o prodcon prodcon.o tands.o
 
 clean:
-	rm -f prodcon
+	rm -f prodcon prodcon.o tands.o
