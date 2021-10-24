@@ -27,6 +27,9 @@ void Interrupt( int signal ) {
 		perror( "Failed longjmp" );
 		exit( -1 );
 	}
+	else {
+		exit(0);
+	}
 }
 
 // A do-nothing loop
@@ -44,14 +47,14 @@ void Looping() {
 // from being inside Looping (or even being inside of printf, inside of Looping) to Restart_Loopoing
 int main( void ) {
 
+
+	// Catch control-C
+	signal( SIGINT, Interrupt );
 	// Save the state for a potential longjmp() back to here
 	if( sigsetjmp( Restart_Looping,1 ) < 0 ) {
 		perror( "Failed setjmp" );
 		exit( -1 );
 	}
-	// Catch control-C
-	signal( SIGINT, Interrupt );
-
 	// Idle computing
 	Looping();
 

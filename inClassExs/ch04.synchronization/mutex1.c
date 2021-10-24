@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 
-#define	LOOP	1000
+#define	LOOP	1000000
 
 #define	NO	0
 #define	YES	1

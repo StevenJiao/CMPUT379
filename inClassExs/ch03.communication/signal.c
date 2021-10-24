@@ -21,11 +21,18 @@ void Quit( int signal ) {
 	exit( 0 );
 }
 
+// control-z
+void testing(int signal) {
+	fprintf(stderr, "\nayo u hit this shiet! Caught signal %d (Counter=%d)\n", signal, Counter);
+}
+
 int main (void) {
 	// When a SIGINT (control-C) is given, call the routine Interrupt()
 	signal( SIGINT, Interrupt );
 	// When a SIGQUIT (control-\) is given, call the routine Quit()
 	signal( SIGQUIT, Quit );
+	//control z
+	signal( SIGTSTP, testing );
 
 	// A do-nothing loop to illustrate when signals occur
 	for( Counter = 0; Counter < 100; Counter++ ) {

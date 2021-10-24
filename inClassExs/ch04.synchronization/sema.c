@@ -52,9 +52,9 @@ int main( void ) {
 	pthread_t ntid;
 
 	if( sem_init( &SwapLock, 0, 1 ) ) {
-                perror( "Sempahore init" );
-                exit( -1 );
-        }
+		perror( "Sempahore init" );
+		exit( -1 );
+	}
 
 	for( i = 0; i < NTHREADS; i++ ) {
 		if( pthread_create( &ntid, NULL, threadloop, (void *)NULL ) ) {
