@@ -140,6 +140,10 @@ void *getWork(void *input) {
     return NULL;
 }
 
+/**
+ * @brief 
+ * 
+ */
 void appendSummary() {
     // get total time and transactions per second
     auto diff = chrono::steady_clock::now() - start;
