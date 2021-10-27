@@ -42,6 +42,7 @@ static string events[] = {
 
 // struct for building our summary report
 struct summary {
+    // counters for our summary report
     map<string, int> s {
         {"Work", 0},
         {"Ask", 0},
@@ -49,6 +50,7 @@ struct summary {
         {"Complete", 0},
         {"Sleep", 0},
     };
+    // counter for num jobs assigned to each thread
     vector<int> tJobs;
 };
 // global summary
@@ -198,9 +200,10 @@ int main(int argc, char const *argv[]) {
         }
         else {
             // producer sleep command
-            Sleep(n);
             s.s["Sleep"]++;
             writeToFile(events[3], 0, -1, n);
+            Sleep(n);
+            s.s["Sleep"]++;
         }
     }
     done = true;
