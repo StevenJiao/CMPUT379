@@ -1,4 +1,3 @@
-#include "tands.hpp"
 // DO NOT MODIFY THIS FILE
 
 // Trans simulates processing a transaction

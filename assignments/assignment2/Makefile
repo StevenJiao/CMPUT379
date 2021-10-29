@@ -1,7 +1,12 @@
 CC = g++
+FLAGS = -O -pthread
 
-prodcon: prodcon.o tands.o
-	$(CC) -pthread -o prodcon prodcon.o tands.o
+OBJECTS = prodcon.o
+
+prodcon: $(OBJECTS)
+	$(CC) $(FLAGS) -o $@ $^
 
 clean:
-	rm -f prodcon prodcon.o tands.o
+	rm -f prodcon $(OBJECTS)
+
+$(OBJECTS): prodcon.hpp
