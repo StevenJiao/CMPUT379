@@ -8,7 +8,7 @@
 
 using namespace std;
 
-// struct for building our summary report
+// struct definition for building our summary report
 struct summary {
     // counters for our summary report
     map<string, int> s {
@@ -30,13 +30,13 @@ auto start = chrono::steady_clock::now();;
  * 
  */
 class writer {
-private:
+ private:
     // mutex var for file writing
     sem_t fileMutex;
     // name of output file
     string outputFileName;
 
-public:
+ public:
     /**
      * @brief Construct a new writer object
      * 
@@ -113,6 +113,8 @@ public:
 
     /**
      * @brief takes a summary struct and writes all the summary out to the output file
+     * 
+     * NOTE: This is assumed to take place after threads are dead and producer finishes
      * 
      * @param s summary struct that contains the job counters
      */
