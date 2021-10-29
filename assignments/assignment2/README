@@ -67,3 +67,6 @@ Assumptions:
         accessing the output file -> no lock is in place for mutual exclusion here.
     * Keyboard input MUST be terminated with the crtl+d EOF char, and keyboard input is required if no input file
         is specified when prodcon is called.
+    * Writing to the same output file will just keep appending to the file. For example, calling "./prodcon 3 1 <input"
+        and then "./prodcon 3 1 <input" will write to the same file "prodcon.1.log". The second call will not overwrite
+        the existing output file but only append to it.
