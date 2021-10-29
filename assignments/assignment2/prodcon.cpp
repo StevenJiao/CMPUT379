@@ -1,8 +1,7 @@
 #include "prodcon.hpp"
 
 /**
- * @brief The main thread worker function
- * 
+ * @brief The main thread worker function.
  * This function will continually run on the queue until nothing is left
  * and the queue itself is empty
  * 
@@ -71,7 +70,7 @@ int main(int argc, char const *argv[]) {
         // initialize thread job count for summary
         s.tJobs.push_back(0);
         // create our thread and get it to do work
-        pthread_create(&thread_id[i], NULL, getWork, (void *) i);
+        pthread_create(&thread_id[i], NULL, getWork, (void *)(pthread_t) i);
     }
 
     // get the input either from commandline or file and assign work
