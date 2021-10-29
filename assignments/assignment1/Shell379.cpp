@@ -1,9 +1,4 @@
 #include <iostream>
-#include <string>
-#include <string.h>
-#include <vector>
-#include <sstream>
-#include <array>
 #include <cstdio>
 #include <memory>
 #include <stdexcept>
@@ -13,6 +8,7 @@
 #include <sys/wait.h>
 #include <sys/signal.h>
 #include <fcntl.h>
+#include "helperFuncs.hpp"
 using namespace std; 
 
 int LINE_LENGTH = 100; // Max # of characters in an input line
@@ -24,45 +20,11 @@ pid_t mainPid;
 struct rusage myUsage;
 int status;
 
-string readCmd(string cmd) {
-    FILE * p; 
-    array<char, 128> buffer;
-    string result;
-    if ((p = popen(cmd.c_str(), "r")) == NULL) {
-        perror( "Couldn't open pipe\n");
-    }
-    else {
-        while (fgets(buffer.data(), buffer.size(), p) != nullptr) {
-            result += buffer.data();
-        }
-        pclose(p);
-    }
-    return result;
-}
-
-vector<string> stringToArgs(string s) {
-    stringstream ss(s);
-    vector<string> args;
-    string line;
-    while (getline(ss, line, ' ')) {
-        args.push_back(line);
-    }
-    return args;
-}
-
-void argsToCharC(vector<string> args, char ** argv1) {
-    for (int i = 0; i < args.size(); i++) {
-        argv1[i] = strdup(args[i].c_str());
-    }
-    argv1[args.size()] = NULL;
-}
-
 int main(int argc, char const *argv[]) {
-    bool continueRunning = true;
     mainPid = getpid();
     cout << "Welcome to SHELL379 - Syjiao" << endl;
 
-    while (continueRunning) {
+    while (true) {
         cout << "SHELL379: ";
         string initialInput;
         getline(cin, initialInput);
@@ -95,21 +57,24 @@ int main(int argc, char const *argv[]) {
             cout << output_lines_from_ps << " " << mainPid << endl;
             exit(0);
         }
-        else if (args[0].compare("jobs") == 0) { // fix header with 0 processes to not show up
+        else if (args[0].compare("jobs") == 0) {
             cout << endl;
-            string cmd = "ps -o pid,s,times:3=SEC,command --ppid " + to_string(mainPid) + " | grep -v sh";
-            //string cmd = "ps -o pid,s,times:3=SEC,command --ppid " + to_string(mainPid);
+            string cmd = "ps -o pid,s,times:3=SEC,command --ppid " + to_string(mainPid) + " | grep -v sh | grep -v defunct";
             string output_lines_from_ps = readCmd(cmd);
             cout << "Running processes: " << endl;
 
             stringstream ss(output_lines_from_ps);
             string to;
             int counter = 0;
+            string header;
             while(getline(ss,to,'\n')) {
                 if (counter == 0) {
-                    cout << " #  " << to << endl;
+                    header = " #  " + to + "\n";
                 }
                 else {
+                    if (counter == 1) {
+                        cout << header;
+                    }
                     string space = (counter - 1 < 10) ? " " : "";
                     cout << space << (counter - 1) << ": " << to << endl;
                 }
@@ -197,7 +162,15 @@ int main(int argc, char const *argv[]) {
                 argsToCharC(args, argv1);
                 if (!hasAmpersand) {
                     int j;
-                    wait(&j);
+                    waitpid(rc, &j, 0);
+                }
+
+                if (inputFid != -1) {
+                    close(inputFid);
+                }
+
+                if (outputFid != -1) {
+                    close(outputFid);
                 }
             }
         }
