@@ -51,7 +51,7 @@ void *getWork(void *input) {
 }
 
 int main(int argc, char const *argv[]) {
-    // catch error where threadnumber is not given
+    // catch error where thread number is not given
     if (argc == 1) { 
         cout << "Invalid number of arguments provided to prodcon." << endl;
         return 0; 
