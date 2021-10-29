@@ -51,10 +51,18 @@ void *getWork(void *input) {
 }
 
 int main(int argc, char const *argv[]) {
-    // catch error where thread number is not given
-    if (argc == 1) { 
+    // catch errors where invalid inputs are given
+    if (argc == 1 || argc > 3) { 
         cout << "Invalid number of arguments provided to prodcon." << endl;
         return 0; 
+    }
+    else if (stoi(argv[1]) <= 0) {
+        cout << "Invalid number of threads chosen." << endl;
+        return 0;
+    }
+    else if (argc == 3 && stoi(argv[2]) < 0) {
+        cout << "Invalid outputfile number chosen." << endl;
+        return 0;
     }
 
     // get the number of threads and output file number if given
