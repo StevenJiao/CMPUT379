@@ -23,6 +23,7 @@ Run instructions:
             and S for producer sleep), the first position argument (ex. 3) is the number of threads, 
             and second, optional input arg (ex. 1) being the log file name.
             or "./prodcon 3" and specify input on command line (then writing EOF with ctrl+d)
+    4. run "make clean" after finishing to clean up executable and object files
 
 About files:
     * prodcon.cpp: 
@@ -42,4 +43,27 @@ About files:
             work done per second for the summary
 
 General approach:
-    * 
+    * For this problem, I used 2 binary semaphores. 1 was for locking the logging file inputs
+        and the other was used for locking the reading & popping of the queue once a consumer 
+        was able to go in to grab a job.
+    * I used a loop within the consumer job so that depending on how many threads I spawned, 
+        they would all be running the loop until we run out of jobs in the queue AND the producer
+        has signalled that it reached EOF of input.
+    * If no other consumer is using the queue/not currently locked, the current consumer will lock the queue 
+        during the reading of the next job in the queue, grabbing the queue size, and popping the queue all at once.
+        Then after accessing, it will write to the log file and perform its task. If there is no jobs in 
+        the queue but the producer hasn't reached EOF of inputs, then the consumer will free the semaphore
+        and try again to not hold up the critical section. There is also a check within the critical section
+        to see if the producer reached EOF and the queue is empty in case that everything finished while the 
+        current thread was in the process of locking the semaphore for the very beginning of reading.
+    * writing to the output file was made into its own class called writer -> see writer.cpp
+
+Assumptions:
+    * Only 2 places I've locked that are considered critical is accessing the queue (to prevent the issue
+        of possible 1 consumer seeing a job that is present but is then taken by a second consumer) and the
+        writing to the output file so we don't end up with garbled data; each line outputted into the log makes
+        sense and is chronological.
+    * Summary printed at the very end will happen AFTER all consumer threads are dead. That is, nothing is 
+        accessing the output file -> no lock is in place for mutual exclusion here.
+    * Keyboard input MUST be terminated with the crtl+d EOF char, and keyboard input is required if no input file
+        is specified when prodcon is called.
