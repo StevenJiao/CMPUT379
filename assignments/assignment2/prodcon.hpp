@@ -37,7 +37,7 @@ static string events[] = {
     "End"
 };
 
-// global summary struct counter
+// global summary struct counter 
 summary s;
 
 // our global writer
