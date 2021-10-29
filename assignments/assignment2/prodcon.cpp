@@ -51,6 +51,12 @@ void *getWork(void *input) {
 }
 
 int main(int argc, char const *argv[]) {
+    // catch error where threadnumber is not given
+    if (argc == 1) { 
+        cout << "Invalid number of arguments provided to prodcon." << endl;
+        return 0; 
+    }
+
     // get the number of threads and output file number if given
     numThreads = stoi(argv[1]);
     // max queue size is 2 times number of threads
