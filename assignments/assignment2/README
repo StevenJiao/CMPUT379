@@ -57,6 +57,10 @@ General approach:
         to see if the producer reached EOF and the queue is empty in case that everything finished while the 
         current thread was in the process of locking the semaphore for the very beginning of reading.
     * writing to the output file was made into its own class called writer -> see writer.cpp
+    * Producer will hit a while loop if it sees that the queue is at max capacity; stalls until consumers take more
+        work to lower it under max capacity (set to 2 * number of threads)
+    * When the producer grabs the number of jobs on the queue, it will also use the queue semaphore to grab an accurate 
+        reading of the number of jobs when it prints its "work" log.
 
 Assumptions:
     * Only 2 places I've locked that are considered critical is accessing the queue (to prevent the issue

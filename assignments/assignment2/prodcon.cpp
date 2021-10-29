@@ -97,10 +97,16 @@ int main(int argc, char const *argv[]) {
         if (line.at(0) == 'T') {
             // wait while we've hit max capacity
             while (myQ.size() == maxQSize);
+
+            sem_wait(&qMutex);
             // push thread work onto the Queue
             myQ.push(n);
+            // get accurate size of our queue for log
+            int qSize = myQ.size();
+            sem_post(&qMutex);
+
+            w.writeToFile(events[2], 0, qSize, n);
             s.s["Work"]++;
-            w.writeToFile(events[2], 0, myQ.size(), n);
         }
         else {
             // producer sleep command; log first to make sense
