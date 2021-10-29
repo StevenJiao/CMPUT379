@@ -1,9 +1,12 @@
 #include "prodcon.hpp"
 
 /**
- * @brief Get the Work object
+ * @brief The main thread worker function
  * 
- * @param input 
+ * This function will continually run on the queue until nothing is left
+ * and the queue itself is empty
+ * 
+ * @param input the void* of the thread's ID
  * @return void* 
  */
 void *getWork(void *input) {
@@ -59,6 +62,7 @@ int main(int argc, char const *argv[]) {
     // initialize our binary queue access mutex
     sem_init(&qMutex, 0, 1);
 
+    // set the outputfile name for our writer
     w.setOutputFile(outputFileName);
 
     // initialize and spawn our threads
@@ -73,25 +77,30 @@ int main(int argc, char const *argv[]) {
     // get the input either from commandline or file and assign work
     string line;
     while (getline(cin, line)) {
+        // parse the numerical value 
         int n = atoi(line.substr(1, string::npos).c_str());
+        
+        // check if its a thread task or producer sleep
         if (line.at(0) == 'T') {
             // wait while we've hit max capacity
             while (myQ.size() == maxQSize);
+            // push thread work onto the Queue
             myQ.push(n);
             s.s["Work"]++;
             w.writeToFile(events[2], 0, myQ.size(), n);
         }
         else {
-            // producer sleep command
+            // producer sleep command; log first to make sense
             w.writeToFile(events[3], 0, -1, n);
             Sleep(n);
             s.s["Sleep"]++;
         }
     }
+    // our flag for signalling the producer is done
     done = true;
     w.writeToFile(events[5], 0, -1, -1);
 
-    // wait for threads to finish
+    // wait for all threads to finish
     for (int i = 1; i < numThreads + 1; i++) {
         pthread_join(thread_id[i], NULL);
     }
