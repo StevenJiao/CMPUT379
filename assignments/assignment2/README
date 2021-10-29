@@ -1,0 +1,45 @@
+Name: Steven Jiao
+CCID: 1442672
+CMPUT 379, FALL21
+Date: 10/29/2021
+Acknowledgements: N/A
+Assignment 2: Producer-Consumer Problem
+
+Included files:
+    * prodcon.cpp
+    * prodcon.hpp
+    * writer.cpp
+    * tandc.c
+    * Makefile
+    * README
+
+Run instructions:
+    1. Unzip the prodcon_syjiao.zip file into a working directory
+    2. Navigate to the directory and run "make"
+    3. The prodcon program can now be run, as specified by assignment 2 specifications
+        ex. run the command(s):
+            "./prodcon 3 1 <input" or "./prodcon 3 <input" where input is
+            a file containing the inputs as formatted for assignment 2 (ex. T for consumer work
+            and S for producer sleep), the first position argument (ex. 3) is the number of threads, 
+            and second, optional input arg (ex. 1) being the log file name.
+            or "./prodcon 3" and specify input on command line (then writing EOF with ctrl+d)
+
+About files:
+    * prodcon.cpp: 
+        * the main file for handling producer parsing of input and 
+            directing consumer work as threads. It will also call a writer
+            for writing to the output file. 
+    * prodcon.hpp: 
+        * the header file for prodcon.cpp; contains global vars that are
+            accessible by consumers, and other static definitions of string for 
+            writing to the log file what the producers and consumers are doing
+    * writer.cpp:
+        * a writer class that handles the threadsafe appending to an output
+            file for logging purposes
+        * also contains a struct for holding summary statistics for the
+            number of jobs, number of sleeps, and etc.
+        * has a timer for logging the time of logs and calculating the 
+            work done per second for the summary
+
+General approach:
+    * 
