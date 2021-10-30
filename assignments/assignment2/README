@@ -74,3 +74,5 @@ Assumptions:
     * Writing to the same output file will just keep appending to the file. For example, calling "./prodcon 3 1 <input"
         and then "./prodcon 3 1 <input" will write to the same file "prodcon.1.log". The second call will not overwrite
         the existing output file but only append to it.
+    * Assumes that the input file or inputs are formatted correctly. There is no error checking for correct inputs for
+        producer or consumer commands.
