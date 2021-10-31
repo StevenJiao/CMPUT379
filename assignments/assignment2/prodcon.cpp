@@ -16,28 +16,40 @@ void *getWork(void *input) {
     w.writeToFile(events[0], tid, -1, -1);
     s.s["Ask"]++;
 
-    // keep looping if producer is still going or we have work in the queue
-    while (!done || myQ.size() != 0) {
+    // keep looping until producer is EOF and queue is empty
+    while (!(done && myQ.size() == 0)) {
         // lock queue state lookup/work pop so it won't change
-        sem_wait(&qMutex);
-        // if we're fully done, post and break so we can end this thread
-        if (done && myQ.size() == 0) { sem_post(&qMutex); break; }
-        // if we've done all the work but producer still going, post and retry
-        if (myQ.size() == 0 && !done) { sem_post(&qMutex); continue;}
+        pthread_mutex_lock(&qMutex);
+        // check if the queue size is 0
+        while (myQ.size() == 0) {
+            // if producer reached EOF/finished then we exit
+            if (done) {
+                pthread_mutex_unlock(&qMutex);
+                pthread_exit(NULL);
+                return 0;
+            }
+            // if producer not done yet we wait for the signal
+            else {
+                pthread_cond_wait(&qEmptyCond, &qMutex);
+            }
+        }
         // get the next job
         int n = myQ.back();
-        // get the size at the time of grabbing the job
+        // get the queue size at the time of grabbing the job
         int size = myQ.size();
         // pop our selection out of queue
         myQ.pop();
-        sem_post(&qMutex); // release
+        // send signal we're not full anymore to producer if its waiting 
+        pthread_cond_signal(&qFullCond);
+        pthread_mutex_unlock(&qMutex);
 
-        // thread receives work, and performs work
+        // log work and perform it
         w.writeToFile(events[1], tid, myQ.size(), n);
         s.s["Receive"]++;
         Trans(n); // "work"
+        // increase job counter of this consumer after finishing
         s.tJobs[tid - 1]++;
-        // thread completes work
+        // log thread completes work
         w.writeToFile(events[4], tid, -1, n);
         s.s["Complete"]++;
 
@@ -45,14 +57,14 @@ void *getWork(void *input) {
         w.writeToFile(events[0], tid, -1, -1);
         s.s["Ask"]++;
     }
-    // exit and return
+    // exit and return to make sure we get out
     pthread_exit(NULL);
     return NULL;
 }
 
 int main(int argc, char const *argv[]) {
     // catch errors where invalid inputs are given
-    if (argc == 1 || argc > 3) { 
+    if (argc == 1 || argc > 3) {
         cout << "Invalid number of arguments provided to prodcon." << endl;
         return 0; 
     }
@@ -69,16 +81,13 @@ int main(int argc, char const *argv[]) {
     numThreads = stoi(argv[1]);
     // max queue size is 2 times number of threads
     int maxQSize = 2*numThreads;
+    // construct output file name as per assignment spec
     string outputFileNum = argc == 3 ? argv[2] : "";
     outputFileName = outputFileNum.size() > 0 ? "prodcon." + outputFileNum + ".log" : "prodcon.log";
-
-    // initialize our binary queue access mutex
-    sem_init(&qMutex, 0, 1);
-
     // set the outputfile name for our writer
     w.setOutputFile(outputFileName);
 
-    // initialize and spawn our threads
+    // initialize and spawn our consumers/threads
     pthread_t thread_id[numThreads + 1];
     for (int i = 1; i < numThreads + 1; i++) {
         // initialize thread job count for summary
@@ -87,7 +96,7 @@ int main(int argc, char const *argv[]) {
         pthread_create(&thread_id[i], NULL, getWork, (void *)(pthread_t) i);
     }
 
-    // get the input either from commandline or file and assign work
+    // producer: get the input either from commandline or file and assign work
     string line;
     while (getline(cin, line)) {
         // parse the numerical value 
@@ -95,16 +104,21 @@ int main(int argc, char const *argv[]) {
         
         // check if its a thread task or producer sleep
         if (line.at(0) == 'T') {
-            // wait while we've hit max capacity
-            while (myQ.size() == maxQSize);
-
-            sem_wait(&qMutex);
-            // push thread work onto the Queue
+            // lock queue while putting work in
+            pthread_mutex_lock(&qMutex);
+            // if queue is full, wait on condition from consumers
+            while (myQ.size() == maxQSize) {
+                pthread_cond_wait(&qFullCond, &qMutex);
+            }
+            // push thread work onto the queue
             myQ.push(n);
-            // get accurate size of our queue for log
+            // grab current size of our queue for log
             int qSize = myQ.size();
-            sem_post(&qMutex);
+            // send signal to currently waiting consumers that work is ready
+            pthread_cond_broadcast(&qEmptyCond);
+            pthread_mutex_unlock(&qMutex);
 
+            // log work given
             w.writeToFile(events[2], 0, qSize, n);
             s.s["Work"]++;
         }
@@ -115,12 +129,15 @@ int main(int argc, char const *argv[]) {
             s.s["Sleep"]++;
         }
     }
-    // our flag for signalling the producer is done
+    // our flag for signalling the producer is done/reached EOF
     done = true;
+    // log end/EOF 
     w.writeToFile(events[5], 0, -1, -1);
 
     // wait for all threads to finish
     for (int i = 1; i < numThreads + 1; i++) {
+        // send the broadcast to straggler consumers that just made it to wait cond
+        pthread_cond_broadcast(&qEmptyCond);
         pthread_join(thread_id[i], NULL);
     }
     

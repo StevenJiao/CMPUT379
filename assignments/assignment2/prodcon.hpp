@@ -2,7 +2,6 @@
 #include <iostream>
 #include <string>
 #include <pthread.h>
-#include <semaphore.h>
 #include <chrono>
 #include <stdio.h>
 #include <iomanip>
@@ -14,8 +13,17 @@
 using namespace std;
 
 // global mutex var for accessing the queue
-sem_t qMutex;
+pthread_mutex_t qMutex = PTHREAD_MUTEX_INITIALIZER;
+// global mutex for consumers checking on the empty queue cond
+pthread_mutex_t qEmptyCondMutex = PTHREAD_MUTEX_INITIALIZER;
 
+// global pthread conditions for when the queue is empty
+pthread_cond_t qEmptyCond  = PTHREAD_COND_INITIALIZER;
+// global pthread conditions for when the queue is full
+pthread_cond_t qFullCond  = PTHREAD_COND_INITIALIZER;
+
+// global var for signalling producer reached EOF 
+// and no more work is going to be assigned
 bool done = false;
 
 // global queue for work

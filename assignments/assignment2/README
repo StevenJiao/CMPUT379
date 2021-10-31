@@ -43,36 +43,32 @@ About files:
             work done per second for the summary
 
 General approach:
-    * For this problem, I used 2 binary semaphores. 1 was for locking the logging file inputs
-        and the other was used for locking the reading & popping of the queue once a consumer 
-        was able to go in to grab a job.
-    * I used a loop within the consumer job so that depending on how many threads I spawned, 
-        they would all be running the loop until we run out of jobs in the queue AND the producer
-        has signalled that it reached EOF of input.
-    * If no other consumer is using the queue/not currently locked, the current consumer will lock the queue 
-        during the reading of the next job in the queue, grabbing the queue size, and popping the queue all at once.
-        Then after accessing, it will write to the log file and perform its task. If there is no jobs in 
-        the queue but the producer hasn't reached EOF of inputs, then the consumer will free the semaphore
-        and try again to not hold up the critical section. There is also a check within the critical section
-        to see if the producer reached EOF and the queue is empty in case that everything finished while the 
-        current thread was in the process of locking the semaphore for the very beginning of reading.
-    * writing to the output file was made into its own class called writer -> see writer.cpp
-    * Producer will hit a while loop if it sees that the queue is at max capacity; stalls until consumers take more
-        work to lower it under max capacity (set to 2 * number of threads)
-    * When the producer grabs the number of jobs on the queue, it will also use the queue semaphore to grab an accurate 
-        reading of the number of jobs when it prints its "work" log.
+    * For this problem, I used 2 mutexes.
+        * 1 was for locking the logging file inputs in my writer class
+        * Another I used to lock access to the queue so only the producer or 1 consumer was 
+            accessing at it at all times.
+    * I used a loop within the consumer job so that all spawned threads would keep running the 
+        loop until we run out of jobs in the queue AND the producer has signalled that it reached EOF of input.
+    * 2 pthread_cond_t vars were used for the following:
+        * In order to avoid busy wait in consumers while the queue was empty, I included a while condition
+            after the consumer locks the queue access mutex to check if the queue was empty or not. If it was, then
+            we would invoke the pthread_cond_wait() until the producer has pthread_cond_broadcast() after it inserted
+            a new entry. 
+        * The same approach was used for when the producer added the maximum allowed entries into the queue, as it also
+            calls pthread_cond_wait() until a consumer calls pthread_cond_signal() after it has taken a job off the queue.
+    * I also call pthread_cond_broadcast() in the pthread_join() calls for all threads so that it can do its best in 
+        catching straggler consumers that may have just missed the previous call
+    * Writing to the output file was made into its own thread-safe class called writer (writer.cpp)
 
 Assumptions:
     * Only 2 places I've locked that are considered critical is accessing the queue (to prevent the issue
         of possible 1 consumer seeing a job that is present but is then taken by a second consumer) and the
         writing to the output file so we don't end up with garbled data; each line outputted into the log makes
         sense and is chronological.
-    * Summary printed at the very end will happen AFTER all consumer threads are dead. That is, nothing is 
-        accessing the output file -> no lock is in place for mutual exclusion here.
     * Keyboard input MUST be terminated with the crtl+d EOF char, and keyboard input is required if no input file
         is specified when prodcon is called.
     * Writing to the same output file will just keep appending to the file. For example, calling "./prodcon 3 1 <input"
         and then "./prodcon 3 1 <input" will write to the same file "prodcon.1.log". The second call will not overwrite
         the existing output file but only append to it.
-    * Assumes that the input file or inputs are formatted correctly. There is no error checking for correct inputs for
+    * Assumes that the input file or inputs are formatted correctly (ex. always capital 'T' or 'S' followed by integers). There is no error checking for correct inputs for
         producer or consumer commands.
