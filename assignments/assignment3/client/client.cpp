@@ -14,9 +14,12 @@
 
 using namespace std;
 
+/**
+ * @brief A simple client program used to connect to a server given a port number and ip address
+ */
 int main(int argc , char *argv[]) {
 	string serv_ip_addr = "129.128.29.111"; // ue11.cs.ualberta.ca
-	int server_port = 8888; // lucky port num
+	int server_port = 8888; // lucky number
 	vector<char> clientName(2000);
 	string fullClientName;
 	int sock;
@@ -31,6 +34,10 @@ int main(int argc , char *argv[]) {
 	if (argc == 3) {
 		server_port = stoi(argv[1]);
 		serv_ip_addr = argv[2];
+	}
+	else {
+		perror("Invalid number of inputs for client");
+		return 1;
 	}
 	
 	// Create socket
@@ -64,7 +71,7 @@ int main(int argc , char *argv[]) {
 		if (line.at(0) == 'T') {
 			// Send work data along with client name
 			if( send(sock, (line + "-" + fullClientName).c_str(), line.length() + fullClientName.length() + 1, 0) < 0 ) {
-				puts("Send failed");
+				perror("Send failed");
 				return 1;
 			}
 			// update the number of transactions sent
@@ -77,7 +84,7 @@ int main(int argc , char *argv[]) {
 			int read_size;
 			vector<char> buf(5000);
 			if( read_size = recv(sock, buf.data(), buf.size(), 0) <= 0) {
-				puts("recv failed");
+				perror("recv failed");
 				break;
 			}
 
