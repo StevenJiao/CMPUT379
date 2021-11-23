@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <chrono>
 
-#include "../tands.c"
+#include "tands.c"
 #include "clientwriter.cpp"
 
 using namespace std;

@@ -11,7 +11,7 @@
 #include <map>
 #include <sys/poll.h>
 
-#include "../tands.c"
+#include "tands.c"
 #include "serverwriter.cpp"
 
 using namespace std;
@@ -118,7 +118,7 @@ int main(int argc , char *argv[]) {
 		portNum = stoi(argv[1]);
 	}
 	else {
-		perror("Invalid number of inputs given.");
+		printf("Invalid number of inputs given.");
 		return 1;
 	}
 	
