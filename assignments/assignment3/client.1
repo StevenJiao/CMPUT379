@@ -7,8 +7,8 @@
 
 .SH SYNOPSIS
 .B client
-.RB {| PORT NUMBER |}
-.RB {| SERVER IP ADDRESS |}
+.RB {PORT NUMBER}
+.RB {SERVER IP ADDRESS}
 
 .SH DESCRIPTION
 .B client
@@ -17,7 +17,7 @@ Client will also read the stdin for inputs to send over to the server. It will a
 
 .RS
 .nf
-- Follows standard protocol for connecting:
+Follows standard protocol for connecting:
     1. socket()
     2. connect()
     3. write()/read() to server
@@ -28,15 +28,15 @@ After execution, the client will simply exit.
 
 .SH EXAMPLES
 .TP
-.BI client 8888 129.128.29.111 <input
+client 8888 129.128.29.111 <input
 
-.SH FILES
+.SH REQUIRED FILES
 .TP
 .I
-../clientwriter.cpp
+clientwriter.cpp
 .TP
 .I
-../tands.c
+tands.c
 
 .SH AUTHOR
 .PP

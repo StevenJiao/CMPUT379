@@ -7,7 +7,7 @@
 
 .SH SYNOPSIS
 .B server
-.RB {| PORT NUMBER |}
+.RB {PORT NUMBER}
 
 .SH DESCRIPTION
 .B server
@@ -17,7 +17,7 @@ It will also handle multiple clients connecting at once (up to 10 in the waiting
 
 .RS
 .nf
-- Follows standard protocol for connecting:
+Follows standard protocol for connecting:
     1. socket()
     2. bind()
     3. listen()
@@ -31,15 +31,15 @@ After execution, the server will wait for 30s before exiting and writing the sum
 
 .SH EXAMPLES
 .TP
-.BI server 8888
+server 8888
 
-.SH FILES
+.SH REQUIRED FILES
 .TP
 .I
-../serverwriter.cpp
+serverwriter.cpp
 .TP
 .I
-../tands.c
+tands.c
 
 .SH AUTHOR
 .PP
