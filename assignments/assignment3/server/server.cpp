@@ -54,7 +54,8 @@ int main(int argc , char *argv[]) {
 	// Create socket
 	socket_desc = socket(AF_INET , SOCK_STREAM , 0);
 	if (socket_desc == -1) {
-		printf("Could not create socket");
+		perror("Could not create socket");
+		return 1;
 	}
 
 	// setup polling structure 
@@ -71,7 +72,6 @@ int main(int argc , char *argv[]) {
 	
 	// Bind
 	if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0) {
-		//print the error message
 		perror("bind failed. Error");
 		return 1;
 	}
@@ -82,10 +82,10 @@ int main(int argc , char *argv[]) {
 	// get our writer
 	writer = serverwriter(fullServerName, portNum);
 	
-	// Accept and incoming connection
-	puts("Waiting for incoming connections...");
+	// Accept continuously check for connections
 	c = sizeof(struct sockaddr_in);
 	while( true ) {
+		// check for connections with timeout
 		rc = poll(fds, nfds, timeout);
 
 		// poll failed
@@ -93,35 +93,29 @@ int main(int argc , char *argv[]) {
 			perror("  poll() failed");
 			break;
 		}
-
 		// reached timeout
 		if (rc == 0) {
-			printf("  poll() timed out.  End program.\n");
 			break;
 		}
 
+		// accept the connection
 		client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c);
-		puts("Connection accepted");
-		
+		if (client_sock < 0) {
+			perror("accept failed");
+			return 1;
+		}
+		// give it to thread to perform work
 		pthread_t sniffer_thread;
 		new_sock = new int;
 		*new_sock = client_sock;
-		
 		if( pthread_create(&sniffer_thread , NULL,  connection_handler, (void*) new_sock) < 0) {
 			perror("could not create thread");
 			return 1;
 		}
-		
-		puts("Handler assigned");
-	}
-	
-	if (client_sock < 0) {
-		perror("accept failed");
-		return 1;
 	}
 
 	// write our summary out for each client
-	writer.appendSummary(summary, jobNum--);
+	writer.appendSummary(summary, jobNum-1);
 	
 	return 0;
 }
@@ -140,7 +134,6 @@ void *connection_handler(void *socket_desc) {
 
 	// see if we have data to read from client
 	while( (read_size = recv(sock , buf.data() , buf.size() , 0)) > 0 ) {
-		cout << "got message from client: " << buf.data() << endl;
 		// get string version of data
 		string s(buf.data());
 		// parse job and client name
@@ -178,8 +171,8 @@ void *connection_handler(void *socket_desc) {
 		buf.resize(5000);
 	}
 	
+	// client disconnected check
 	if(read_size == 0) {
-		puts("Client disconnected");
 		fflush(stdout);
 	}
 	else if(read_size < 0) {
