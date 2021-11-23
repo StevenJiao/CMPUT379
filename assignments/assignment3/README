@@ -1,0 +1,66 @@
+Name: Steven Jiao
+CCID: 1442672
+CMPUT 379, FALL21
+Date: 11/22/2021
+Acknowledgements: Silver Moon from https://www.binarytides.com/server-client-example-c-sockets-linux/ for providing the
+    basis of the client-server architecture code in C.
+Assignment 3: Client-Server / Monitoring
+
+Included files:
+    * client.cpp
+    * clientwriter.cpp
+    * server.cpp
+    * serverwriter.cpp
+    * tandc.c
+    * Makefile
+    * README
+
+Run instructions:
+    1. Unzip the assignment3_syjiao.zip file into a working directory
+    2. Navigate to the directory and run "make".
+    3. The server and client programs can now be run, as specified by assignment 3 specifications.
+    4. Run the server program "./server <port number input>" where:
+        - "<port number input>" is a valid port number - same as the one given to the client in step 5
+    5. Run the client program "./client <port number input> <ip address of server> <input" where:
+        - "<port number input>" is a valid port number, and is the same number as the one given to the server.
+        - "<ip address of server>" is the IP Address of the server you are trying to connect to.
+        - "input" is the file input to be read by the client and sent over to the server to perform work.
+            (can also be key-inputs but MUST terminate with EOF command ctrl+d).
+
+About files:
+    * client.cpp: 
+        * The file for handling all client activities, and can read in stdin input files 
+            as specified by assignment3. It also calls clientwriter to append to its log files.
+    * clientwriter.hpp: 
+        * The logger for the client - appends all jobs sent to the server, as well as the job 
+            number recieved after the server has finished the job sent and sleep time.
+    * server.cpp:
+        * The file for handling server activites of delegating work to threads to handle multiple clients
+            at once. 
+        * Calls to serverwriter to append its logs for all work done
+    * serverwriter.cpp:
+        * The thread-safe logger for the server - appends all work done by the server, the messages it sends over to the
+            client with the job number, as well as a summary after the server exits after 30s of inactivity
+    * tands.c: 
+        * The file containing the Sleep() and Trans() functions required for assignment 3
+
+General approach:
+    * The basis for the concurrent server was taken from https://www.binarytides.com/server-client-example-c-sockets-linux/ 
+        (as noted in the Acknowledgements).
+    * I went with the threads approach for handling multiple clients at the same time, while using poll() for checking
+        for more connections made to the server and also handling the 30s timeout function.
+    * The client's logger (clientwriter) was not made thread-safe but the serverwriter was, as I was using threads to perform
+        the work that the client sent over. 
+            * NOTE: the mutexes locking and unlocking the critical section of assigning job numbers was perhaps overdone
+                as I would also lock the writing to log file (which was thread-safe on its own - similar to my assignment2 approach)
+                but I did this in order to get my outputs to look sequential, where the client job came in, and the job number was 
+                sent right after one after the other so that it could match the assignment3 example as closely as possible. For 
+                faster performance, the critical section could be modified to have a 'tighter' critical section with less code.
+
+Assumptions:
+    * As noted in https://eclass.srv.ualberta.ca/mod/forum/discuss.php?d=1859847 we are limiting the number of clients
+        waiting in the server connection queue to 11 to be safe (but 10 is considered to be the max).
+    * Inputs to the client will be the same as in assignment2, and also as shown in the examples of assignment3.
+        * command-line inputs must be terminated with the EOF command of ctrl+d
+        * Inputs will also be correct, only to have a single char of "T" or "S" for clients followed by a number
+    * Output logs for the server is assumed to have the same notation as clients (<hostname>.<pid>)
