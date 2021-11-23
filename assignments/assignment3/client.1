@@ -1,0 +1,50 @@
+.\" Process this file with groff -man -Tascii client.1
+.TH client(1)
+
+.SH NAME
+.B client
+- A simple client program for connecting to a server.
+
+.SH SYNOPSIS
+.B client
+.RB {| PORT NUMBER |}
+.RB {| SERVER IP ADDRESS |}
+
+.SH DESCRIPTION
+.B client
+Run this program to start up a client where PORT NUMBER is the port number you want to connect to and SERVER IP ADDRESS is the ip address of the server.
+Client will also read the stdin for inputs to send over to the server. It will also output logs to the <hostname>.<pid> in the same directory.
+
+.RS
+.nf
+- Follows standard protocol for connecting:
+    1. socket()
+    2. connect()
+    3. write()/read() to server
+    4. close()
+.RE
+
+After execution, the client will simply exit.
+
+.SH EXAMPLES
+.TP
+.BI client 8888 129.128.29.111 <input
+
+.SH FILES
+.TP
+.I
+../clientwriter.cpp
+.TP
+.I
+../tands.c
+
+.SH AUTHOR
+.PP
+Steven Jiao (1442672)
+
+.SH CREDITS
+.PP
+https://www.binarytides.com/server-client-example-c-sockets-linux/ for the initial/base code for the client
+
+.SH SEE ALSO
+.BR server (1)

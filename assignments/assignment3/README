@@ -51,7 +51,7 @@ About files:
         * The groff-generated man page for the client.cpp file
 
 General approach:
-    * The basis for the concurrent server was taken from https://www.binarytides.com/server-client-example-c-sockets-linux/ 
+    * The basis for the concurrent server was taken from https://www.binarytides.com/server-client-example-c-sockets-linux/
         (as noted in the Acknowledgements).
     * I went with the threads approach for handling multiple clients at the same time, while using poll() for checking
         for more connections made to the server and also handling the 30s timeout function.

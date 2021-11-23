@@ -1,0 +1,53 @@
+.\" Process this file with groff -man -Tascii server.1
+.TH server(1)
+
+.SH NAME
+.B server
+- A simple server program for accepting connections by clients
+
+.SH SYNOPSIS
+.B server
+.RB {| PORT NUMBER |}
+
+.SH DESCRIPTION
+.B server
+Run this program to start up a server where PORT NUMBER is the port number you specify for the server to take. It will then wait up to 30s for 
+conections by a client to give it jobs to do. It will then output logs to an output file of the format <hostname>.<pid> in the same directory.
+It will also handle multiple clients connecting at once (up to 10 in the waiting queue).
+
+.RS
+.nf
+- Follows standard protocol for connecting:
+    1. socket()
+    2. bind()
+    3. listen()
+    4. poll()
+    5. connect()
+    6. write()/read() to client
+    7. close()
+.RE
+
+After execution, the server will wait for 30s before exiting and writing the summary of all jobs done to the output file.
+
+.SH EXAMPLES
+.TP
+.BI server 8888
+
+.SH FILES
+.TP
+.I
+../serverwriter.cpp
+.TP
+.I
+../tands.c
+
+.SH AUTHOR
+.PP
+Steven Jiao (1442672)
+
+.SH CREDITS
+.PP
+https://www.binarytides.com/server-client-example-c-sockets-linux/ for the initial/base code for the concurrent server
+
+.SH SEE ALSO
+.BR client (1)
