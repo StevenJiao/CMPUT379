@@ -14,6 +14,8 @@ Included files:
     * tandc.c
     * Makefile
     * README
+    * server.pdf
+    * client.pdf
 
 Run instructions:
     1. Unzip the assignment3_syjiao.zip file into a working directory
@@ -43,6 +45,10 @@ About files:
             client with the job number, as well as a summary after the server exits after 30s of inactivity
     * tands.c: 
         * The file containing the Sleep() and Trans() functions required for assignment 3
+    * server.pdf: 
+        * The groff-generated man page for the server.cpp file
+    * client.pdf:
+        * The groff-generated man page for the client.cpp file
 
 General approach:
     * The basis for the concurrent server was taken from https://www.binarytides.com/server-client-example-c-sockets-linux/ 
