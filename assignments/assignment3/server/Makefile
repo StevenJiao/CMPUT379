@@ -1,8 +1,10 @@
 CC = g++
 FLAGS = -O -pthread
 
-multiserver:
-	$(CC) $(FLAGS) -o $@ multiserver.cpp
+OBJECTS = multiserver.o
+
+multiserver: $(OBJECTS)
+	$(CC) $(FLAGS) -o $@ $^
 
 clean:
-	rm -f multiserver
+	rm -f multiserver $(OBJECTS)

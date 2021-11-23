@@ -1,8 +1,10 @@
 CC = g++
 FLAGS = -O
 
-client:
-	$(CC) $(FLAGS) -o $@ client.cpp
+OBJECTS = client.o
+
+client: $(OBJECTS)
+	$(CC) $(FLAGS) -o $@ $^
 
 clean:
-	rm -f client
+	rm -f $(OBJECTS) client
