@@ -58,9 +58,9 @@ General approach:
                 faster performance, the critical section could be modified to have a 'tighter' critical section with less code.
 
 Assumptions:
-    * As noted in https://eclass.srv.ualberta.ca/mod/forum/discuss.php?d=1859847 we are limiting the number of clients
+    * As noted in https://eclass.srv.ualberta.ca/mod/forum/discuss.php?d=1859847 we are limiting the number of clients.
         waiting in the server connection queue to 11 to be safe (but 10 is considered to be the max).
     * Inputs to the client will be the same as in assignment2, and also as shown in the examples of assignment3.
-        * command-line inputs must be terminated with the EOF command of ctrl+d
-        * Inputs will also be correct, only to have a single char of "T" or "S" for clients followed by a number
-    * Output logs for the server is assumed to have the same notation as clients (<hostname>.<pid>)
+        * command-line inputs must be terminated with the EOF command of "ctrl+d".
+        * Inputs will also be correct, only to have a single char of "T" or "S" for clients followed by a number.
+    * Output logs for the server is assumed to have the same notation as clients (<hostname>.<pid>).
